@@ -190,13 +190,12 @@ namespace Image_Processing
                 }
                 else if (pictureBox2.Image != null)
                 {
-                    imageA = (Bitmap)pictureBox2.Image.Clone();
+                    imageA = new Bitmap((Bitmap)pictureBox2.Image.Clone(), imageB.Width, imageB.Height);
                 }
                 else
                 {
                     throw new Exception("No frame to capture.");
                 }
-
 
                 result = new Bitmap(imageB.Width, imageB.Height);
                 Color mygreen = Color.FromArgb(0, 0, 255);
@@ -223,6 +222,7 @@ namespace Image_Processing
             {
                 MessageBox.Show("Error processing the images: " + ex.Message, "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
             }
+
         }
 
         Device currentDevice;
@@ -231,14 +231,6 @@ namespace Image_Processing
             Device[] devices = DeviceManager.GetAllDevices();
             currentDevice = devices[0];
             currentDevice.ShowWindow(pictureBox2);
-            if (devices.Length > 0)
-            {
-                
-            }
-            else
-            {
-                MessageBox.Show("No picture loaded.", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
-            }
 
             //IDataObject data;
             //Image temp;
@@ -253,6 +245,7 @@ namespace Image_Processing
         private void stopToolStripMenuItem_Click(object sender, EventArgs e)
         {
             currentDevice.Stop();
+            currentDevice = null;
         }
 
         private void histogramToolStripMenuItem_Click(object sender, EventArgs e)
