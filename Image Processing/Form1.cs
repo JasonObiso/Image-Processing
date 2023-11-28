@@ -4,6 +4,7 @@ using System.ComponentModel;
 using System.Data;
 using System.Drawing;
 using System.Linq;
+using System.Runtime.InteropServices;
 using System.Text;
 using System.Threading.Tasks;
 using System.Windows.Forms;
@@ -132,6 +133,7 @@ namespace Image_Processing
                     }
 
                     imageB = new Bitmap(openFileDialog2.FileName);
+                    loaded = imageB;
                     pictureBox1.Image = imageB;
                     pictureBox1.SizeMode = PictureBoxSizeMode.StretchImage;
                 }
@@ -171,21 +173,30 @@ namespace Image_Processing
         {
             try
             {
-                if (imageB == null)
+                if (currentDevice != null)
                 {
-                    if (loaded != null)
-                        imageB = loaded;
+                    currentDevice.Sendmessage();
+                    IDataObject data = Clipboard.GetDataObject();
+
+                    if (data != null && data.GetDataPresent(DataFormats.Bitmap))
+                    {
+                        Image temp = (Image)(data.GetData("System.Drawing.Bitmap", true));
+                        imageA = new Bitmap(temp, imageB.Width, imageB.Height);
+                    }
                     else
-                        throw new Exception("ImageB is not loaded.");
+                    {
+                        throw new Exception("Failed to capture frame from the webcam.");
+                    }
+                }
+                else if (pictureBox2.Image != null)
+                {
+                    imageA = (Bitmap)pictureBox2.Image.Clone();
+                }
+                else
+                {
+                    throw new Exception("No frame to capture.");
                 }
 
-                if (imageA == null)
-                {
-                    if (pictureBox2.Image != null)
-                        imageA = (Bitmap)pictureBox2.Image.Clone();
-                    else
-                        throw new Exception("No frame to capture.");
-                }
 
                 result = new Bitmap(imageB.Width, imageB.Height);
                 Color mygreen = Color.FromArgb(0, 0, 255);
@@ -218,16 +229,30 @@ namespace Image_Processing
         private void connectToolStripMenuItem_Click(object sender, EventArgs e)
         {
             Device[] devices = DeviceManager.GetAllDevices();
+            currentDevice = devices[0];
+            currentDevice.ShowWindow(pictureBox2);
             if (devices.Length > 0)
             {
-                currentDevice = devices[0];
-                currentDevice.Init(pictureBox2.Height, pictureBox2.Width, pictureBox2.Handle.ToInt32());
-                currentDevice.ShowWindow(pictureBox2);
+                
             }
             else
             {
                 MessageBox.Show("No picture loaded.", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
             }
+
+            //IDataObject data;
+            //Image temp;
+            //Device d = devices[0];
+            //d.Sendmessage();
+            //data = Clipboard.GetDataObject();
+            //temp = (Image)(data.GetData("System.Drawing.Bitmap", true));
+            //Bitmap b = new Bitmap(temp);
+            //pictureBox2.Image = b;
+        }
+
+        private void stopToolStripMenuItem_Click(object sender, EventArgs e)
+        {
+            currentDevice.Stop();
         }
 
         private void histogramToolStripMenuItem_Click(object sender, EventArgs e)
